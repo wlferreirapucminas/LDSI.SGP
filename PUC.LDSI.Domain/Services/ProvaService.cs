@@ -44,6 +44,12 @@ namespace PUC.LDSI.Domain.Services
 
             publicacoes.ForEach(x => {
                 var prova = x.Avaliacao.Provas.FirstOrDefault(a => a.AlunoId == aluno.Id);
+                
+                decimal nota = 0;
+                foreach (var questao in prova.QuestoesProva)
+                {
+                    nota = nota + questao.Nota;
+                }
 
                 retorno.Add(new AvaliacaoPublicadaQueryResult()
                 {
@@ -59,7 +65,7 @@ namespace PUC.LDSI.Domain.Services
                     PublicacaoId = x.Id,
                     ProvaId = prova == null ? (int?)null : prova.Id,
                     DataRealizacao = prova == null ? (DateTime?)null : prova.DataProva,
-                    NotaObtida = null //TODO - Calcular a nota obtida e retornar nesse atributo.
+                    NotaObtida = null//nota * x.ValorProva//null //TODO - Calcular a nota obtida e retornar nesse atributo.
                 });
             });
 
@@ -118,17 +124,18 @@ namespace PUC.LDSI.Domain.Services
 
             foreach (var questao in provaInputData.Questoes)
             {
-                var questaoProva = new QuestaoProva() { QuestaoId = questao.QuestaoId };
-                prova.QuestoesProva.Add(questaoProva);
+                var questaoProva = await Task.Run(() => new QuestaoProva() { QuestaoId = questao.QuestaoId });
+                await Task.Run(() => prova.QuestoesProva.Add(questaoProva));
 
-                foreach (var opcao in questaoProva.OpcoesProva)
+
+                foreach (var opcao in questao.Opcoes)
                 {
                     var opcaoProva = new OpcaoProva() { OpcaoAvaliacaoId = opcao.OpcaoAvaliacaoId, Resposta = opcao.Resposta };
                     questaoProva.OpcoesProva.Add(opcaoProva);
                 }
             }
 
-            var avaliacao = await _avaliacaoRepository.ObterComQuestoresAsync(provaInputData.AvaliacaoId);
+            var avaliacao = await _avaliacaoRepository.ObterComQuestoresAsync(prova.AvaliacaoId);
 
             foreach (var questao in prova.QuestoesProva)
             {
