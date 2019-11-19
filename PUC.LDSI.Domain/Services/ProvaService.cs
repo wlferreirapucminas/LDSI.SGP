@@ -46,8 +46,10 @@ namespace PUC.LDSI.Domain.Services
                 var prova = x.Avaliacao.Provas.FirstOrDefault(a => a.AlunoId == aluno.Id);
                 
                 decimal nota = 0;
+                int q = 0;
                 foreach (var questao in prova.QuestoesProva)
                 {
+                    q++;
                     nota = nota + questao.Nota;
                 }
 
@@ -65,7 +67,7 @@ namespace PUC.LDSI.Domain.Services
                     PublicacaoId = x.Id,
                     ProvaId = prova == null ? (int?)null : prova.Id,
                     DataRealizacao = prova == null ? (DateTime?)null : prova.DataProva,
-                    NotaObtida = null//nota * x.ValorProva//null //TODO - Calcular a nota obtida e retornar nesse atributo.
+                    NotaObtida = x.ValorProva / q * nota//null //TODO - Calcular a nota obtida e retornar nesse atributo.
                 });
             });
 
@@ -124,9 +126,12 @@ namespace PUC.LDSI.Domain.Services
 
             foreach (var questao in provaInputData.Questoes)
             {
-                var questaoProva = await Task.Run(() => new QuestaoProva() { QuestaoId = questao.QuestaoId });
+                //var questaoProva = await Task.Run(() => new QuestaoProva() { QuestaoId = questao.QuestaoId });
+                //var questaoProva = new QuestaoProva() { QuestaoId = questao.QuestaoId };
+                var questaoProva = await Task.Run(() => new QuestaoProva());
+                await Task.Run(() => questaoProva.QuestaoId = questao.QuestaoId);
+                //await Task.Run(() => prova.QuestoesProva.Add(questaoProva));
                 await Task.Run(() => prova.QuestoesProva.Add(questaoProva));
-
 
                 foreach (var opcao in questao.Opcoes)
                 {
