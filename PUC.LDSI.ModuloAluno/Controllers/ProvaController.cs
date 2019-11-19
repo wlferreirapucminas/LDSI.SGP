@@ -63,7 +63,7 @@ namespace PUC.LDSI.ModuloAluno.Controllers
         [HttpPost]
         public IActionResult ConcluirProva([FromBody]ProvaInputData provaInputData)
         {
-            _provaService.AdicionarProvaAsync(provaInputData, LoginUsuario);
+            //_provaService.AdicionarProvaAsync(provaInputData, LoginUsuario);
             try
             {
                 if (provaInputData?.AvaliacaoId > 0)
@@ -72,7 +72,7 @@ namespace PUC.LDSI.ModuloAluno.Controllers
                     //Ao gravar a prova, deve ser atribuída a nota por questão conforme especificação do projeto.
                     //A nota da questão **NÃO É A NOTA DA PROVA** é um valor decimal que varia de zero a 1 (um)
                     //A nota da prova será calculada no momento de recuperar a lista de provas publicadas do aluno (view Index)
-                    //_provaService.AdicionarProvaAsync(provaInputData, LoginUsuario);
+                    _provaService.AdicionarProvaAsync(provaInputData, LoginUsuario);
 
                     return Json(new { Success = true });
                 }
