@@ -133,12 +133,16 @@ namespace PUC.LDSI.Domain.Services
 
             foreach (var questao in provaInputData.Questoes)
             {
+                //prova.QuestoesProva = new List<QuestaoProva>();
                 var questaoProva = new QuestaoProva() { QuestaoId = questao.QuestaoId };
+                prova.QuestoesProva = new List<QuestaoProva>();
                 prova.QuestoesProva.Add(questaoProva);
 
                 foreach (var opcao in questao.Opcoes)
                 {
+                    //questaoProva.OpcoesProva = new List<OpcaoProva>();
                     var opcaoProva = new OpcaoProva() { OpcaoAvaliacaoId = opcao.OpcaoAvaliacaoId, Resposta = opcao.Resposta };
+                    questaoProva.OpcoesProva = new List<OpcaoProva>();
                     questaoProva.OpcoesProva.Add(opcaoProva);
                 }
             }
@@ -147,8 +151,6 @@ namespace PUC.LDSI.Domain.Services
 
             foreach (var questao in prova.QuestoesProva)
             {
-                int count = 0;
-                int nota = 0;
                 var questaoAvaliacao = avaliacao.Questoes.Find(y => y.Id == questao.QuestaoId);
                 if (questaoAvaliacao.Tipo == 1)
                 {
@@ -157,17 +159,28 @@ namespace PUC.LDSI.Domain.Services
                 }
                 if (questaoAvaliacao.Tipo == 2)
                 {
-                    foreach (var opcoes in questaoAvaliacao.Opcoes)
+                    var respostas = 0;
+                    foreach (var opcoes in questao.OpcoesProva)
                     {
-                        count++;
-                        var resposta1 = questaoAvaliacao.Opcoes[count].Verdadeira;
-                        var resposta2 = questao.OpcoesProva[count].Resposta;
-                        if (resposta1 == resposta2) { nota++; }
+
+                        if (opcoes.Resposta == questaoAvaliacao.Opcoes.Find(x => x.Id == opcoes.OpcaoAvaliacaoId).Verdadeira)
+                        {
+                            respostas++;
+                        }
                     }
-                    questao.Nota = 1 / count * nota;
+
+                    if (respostas != 0)
+                    {
+                        questao.Nota = (decimal)respostas / (decimal)questaoAvaliacao.Opcoes.Count;
+                    }
+                    else
+                    {
+                        questao.Nota = respostas;
+                    }
                 }
             }
 
+            avaliacao.Provas = new List<Prova>();
             _provaRepository.Adicionar(prova);
 
             await _provaRepository.SaveChangesAsync();
