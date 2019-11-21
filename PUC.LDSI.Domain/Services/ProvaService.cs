@@ -44,14 +44,18 @@ namespace PUC.LDSI.Domain.Services
 
             publicacoes.ForEach(x => {
                 var prova = x.Avaliacao.Provas.FirstOrDefault(a => a.AlunoId == aluno.Id);
-                
+
                 decimal nota = 0;
                 int q = 0;
-                foreach (var questao in prova.QuestoesProva)
+                if (prova != null)
                 {
-                    q++;
-                    nota = nota + questao.Nota;
+                    foreach (var questao in prova.QuestoesProva)
+                    {
+                        nota = nota + questao.Nota;
+                        q++;
+                    }
                 }
+                if (q == 0) q = 1;
 
                 retorno.Add(new AvaliacaoPublicadaQueryResult()
                 {
@@ -118,20 +122,19 @@ namespace PUC.LDSI.Domain.Services
         public async Task<int> AdicionarProvaAsync(ProvaInputData provaInputData, string login)
         {
             var aluno = _alunoRepository.ObterPorLogin(login);
+            var avaliacao = await _avaliacaoRepository.ObterComQuestoresAsync(provaInputData.AvaliacaoId);
 
-            var prova = new Prova();
+            Prova prova = new Prova();
             prova.AlunoId = aluno.Id;
             prova.AvaliacaoId = provaInputData.AvaliacaoId;
             prova.DataProva = DateTime.Now;
+            prova.Aluno = aluno;
+            prova.Avaliacao = avaliacao;
 
             foreach (var questao in provaInputData.Questoes)
             {
-                //var questaoProva = await Task.Run(() => new QuestaoProva() { QuestaoId = questao.QuestaoId });
-                //var questaoProva = new QuestaoProva() { QuestaoId = questao.QuestaoId };
-                var questaoProva = await Task.Run(() => new QuestaoProva());
-                await Task.Run(() => questaoProva.QuestaoId = questao.QuestaoId);
-                //await Task.Run(() => prova.QuestoesProva.Add(questaoProva));
-                await Task.Run(() => prova.QuestoesProva.Add(questaoProva));
+                var questaoProva = new QuestaoProva() { QuestaoId = questao.QuestaoId };
+                prova.QuestoesProva.Add(questaoProva);
 
                 foreach (var opcao in questao.Opcoes)
                 {
@@ -140,7 +143,7 @@ namespace PUC.LDSI.Domain.Services
                 }
             }
 
-            var avaliacao = await _avaliacaoRepository.ObterComQuestoresAsync(prova.AvaliacaoId);
+            //var avaliacao = await _avaliacaoRepository.ObterComQuestoresAsync(provaInputData.AvaliacaoId);
 
             foreach (var questao in prova.QuestoesProva)
             {
